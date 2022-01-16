@@ -44,7 +44,7 @@ resource "aws_network_interface" "dev" {
 }
 
 data "aws_ami" "dev" {
-  executable_users = ["self"]
+  executable_users = ["all"]
   most_recent      = true
   owners           = ["amazon"]
 
@@ -74,7 +74,7 @@ data "aws_ami" "dev" {
   }
 
   filter {
-    name   = "block_device_mappings.ebs.volume_type"
+    name   = "block-device-mapping.volume-type"
     values = ["gp2"]
   }
 }

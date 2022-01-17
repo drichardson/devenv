@@ -1,4 +1,4 @@
-# Cloud Development Environments
+# AWS Development Environments
 Configure cloud compute instances for interactive developer machines.
 
 # Setup

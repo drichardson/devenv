@@ -34,14 +34,50 @@ resource "aws_vpc" "dev" {
 }
 
 resource "aws_subnet" "dev" {
+  count      = 4
   vpc_id     = aws_vpc.dev.id
-  cidr_block = "172.16.0.0/24"
+  cidr_block = "172.16.${count.index}.0/24"
+}
+
+resource "aws_security_group" "dev" {
+  name_prefix = "dev"
+  description = "Developer instance security group."
+  vpc_id      = aws_vpc.dev.id
+
+  ingress {
+    # From port and to port for ICMP from
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group-ingress.html
+    description      = "Ping from Anywhere"
+    from_port        = 8
+    to_port          = 0
+    protocol         = "icmp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    description      = "SSH from Anywhere"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 }
 
 resource "aws_network_interface" "dev" {
-  subnet_id   = aws_subnet.dev.id
-  private_ips = ["172.16.0.1"]
+  subnet_id       = aws_subnet.dev[0].id
+  security_groups = [aws_security_group.dev.id]
 }
+
 
 data "aws_ami" "dev" {
   executable_users = ["all"]
@@ -55,7 +91,7 @@ data "aws_ami" "dev" {
 
   filter {
     name   = "architecture"
-    values = ["x86_64"]
+    values = [var.architecture]
   }
 
   filter {
@@ -95,21 +131,24 @@ resource "aws_ebs_volume" "dev" {
 }
 
 # TODO
-# Security Group
-# Elastic IP aws_eip
 # Routing
 
-resource "aws_instance" "dev" {
+locals {
   # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
   # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504
   # t3.xlarge - 4VCPU, 16GiB x86_64 Intel $0.1664
+  instance_type_by_architecture = {
+    arm64  = "t4g.xlarge"
+    x86_64 = "t3a.xlarge"
+  }
+}
+
+resource "aws_instance" "dev" {
 
   ami           = data.aws_ami.dev.id
-  instance_type = "t3g.xlarge"
+  instance_type = local.instance_type_by_architecture[var.architecture]
 
   key_name = aws_key_pair.dev.id
-
-  associate_public_ip_address = true
 
   ebs_optimized = true
 

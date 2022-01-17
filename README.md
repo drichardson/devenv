@@ -7,6 +7,9 @@ Configure cloud compute instances for interactive developer machines.
 - [aws cli](https://aws.amazon.com/cli/) - configure it to use your AWS account
 - [terraform](https://www.terraform.io/downloads)
 
+Optional: manually delete all default VPCs since they will not be used. You can
+view all your VPCs using [EC2 Global View](https://console.aws.amazon.com/ec2globalview/home).
+
 # Bootstraping Terraform
 The S3 bucket and DynamoDB table for the Terraform S3 backend need to be
 created before anything else. Do this by going to bootstrap and running:

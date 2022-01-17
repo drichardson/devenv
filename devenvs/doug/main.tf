@@ -28,7 +28,7 @@ provider "aws" {
 
 module "devenv" {
   source         = "../../modules/devenv"
-  architecture   = "arm64"
+  architecture   = "x86_64"
   ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJcrrrk512HbXc04iyUdvzM9xAmPnWFWip7MG8sw6NuP"
 }
 

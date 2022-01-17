@@ -32,7 +32,7 @@ Select an AWS region with the lowest ping to make your interactive terminal
 experience feel as responsible as possible. Ping the instance after you set it
 up. If it's too slow, try changing the region.
 
-Great: <20ms
-Meh: 100ms
-Slooooow: >200ms
+- Great: <20ms
+- Meh: ~80ms
+- Sloooow: >150ms
 

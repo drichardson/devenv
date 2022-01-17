@@ -33,10 +33,15 @@ resource "aws_vpc" "dev" {
   cidr_block = "172.16.0.0/16"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_subnet" "dev" {
-  count      = 4
-  vpc_id     = aws_vpc.dev.id
-  cidr_block = "172.16.${count.index}.0/24"
+  count             = 4
+  vpc_id            = aws_vpc.dev.id
+  cidr_block        = "172.16.${count.index}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
 }
 
 resource "aws_security_group" "dev" {
@@ -116,10 +121,9 @@ data "aws_ami" "dev" {
 }
 
 resource "aws_ebs_volume" "dev" {
-  availability_zone = "us-west-2a"
+  availability_zone = local.instance_availability_zone
+  encrypted         = true
   type              = "gp3"
-
-  encrypted = true
 
   # gp3 volumes can be provisioned with different throughput (125-1000 MiB/s)
   # and iops (3000-16000), but there is a relationship requirement between
@@ -141,12 +145,16 @@ locals {
     arm64  = "t4g.xlarge"
     x86_64 = "t3a.xlarge"
   }
+
+  instance_availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_instance" "dev" {
 
   ami           = data.aws_ami.dev.id
   instance_type = local.instance_type_by_architecture[var.architecture]
+
+  availability_zone = local.instance_availability_zone
 
   key_name = aws_key_pair.dev.id
 

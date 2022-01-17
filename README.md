@@ -1,5 +1,6 @@
 # AWS Development Environments
-Configure cloud compute instances for interactive developer use.
+Configure an AWS environment with an EC2 instance for interactive developer
+use.
 
 # Setup
 

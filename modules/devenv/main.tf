@@ -177,9 +177,6 @@ resource "aws_ebs_volume" "dev" {
   iops       = 3000
 }
 
-# TODO
-# Routing
-
 locals {
   # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
   # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504

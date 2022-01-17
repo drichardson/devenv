@@ -7,16 +7,17 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "tfstate-doug"
-    region         = "us-west-2"
-    dynamodb_table = "TerraformStateLock"
+    region = "us-west-2"
 
-    key = "tfstate/devenv-us-west-2"
+    bucket = "tfstate-doug"
+    key    = "tfstate/devenv-us-west-2"
+
+    dynamodb_table = "TerraformStateLock"
   }
 }
 
 provider "aws" {
-  region = "us-west-1"
+  region = "us-west-2"
 
   default_tags {
     tags = {
@@ -27,6 +28,8 @@ provider "aws" {
 
 
 module "devenv" {
-  source = "../../modules/devenv"
+  source         = "../../modules/devenv"
+  architecture   = "x86_64"
+  ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJcrrrk512HbXc04iyUdvzM9xAmPnWFWip7MG8sw6NuP"
 }
 

@@ -1,11 +1,6 @@
-variable "architecture" {
-  description = "Architecture of developer instance."
-  type        = string
-
-  validation {
-    condition     = contains(["x86_64", "arm64"], var.architecture)
-    error_message = "The architecture must be either x86_64 or arm64."
-  }
+variable "ami" {
+  description = "Amazon Machine Image for developer instance."
+  type        = object({ id = string, architecture = string })
 }
 
 variable "ssh_public_key" {

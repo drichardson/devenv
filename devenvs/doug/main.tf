@@ -27,9 +27,14 @@ provider "aws" {
   }
 }
 
+module "ami_picker" {
+  source       = "../../modules/ami_picker"
+  architecture = "x86_64"
+}
+
 module "devenv" {
   source         = "../../modules/devenv"
-  architecture   = "x86_64"
+  ami            = module.ami_picker.ubuntu
   ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJcrrrk512HbXc04iyUdvzM9xAmPnWFWip7MG8sw6NuP"
 }
 

@@ -89,46 +89,14 @@ resource "aws_network_interface" "dev" {
   security_groups = [aws_security_group.dev.id]
 }
 
+/*
 data "aws_ami" "dev" {
-  executable_users = ["all"]
-  most_recent      = true
-  owners           = ["amazon"]
-
   filter {
-    name   = "name"
-    values = ["amzn2-ami-kernel-*"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = [var.architecture]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-
-  filter {
-    name   = "block-device-mapping.volume-type"
-    values = ["gp2"]
-  }
-
-  filter {
-    name   = "ena-support"
-    values = [true]
+    name   = "image-id"
+    values = [var.ami_id]
   }
 }
+*/
 
 resource "aws_ebs_volume" "dev" {
   availability_zone = local.availability_zone
@@ -146,8 +114,8 @@ resource "aws_ebs_volume" "dev" {
 
 resource "aws_instance" "dev" {
 
-  ami           = data.aws_ami.dev.id
-  instance_type = local.instance_type_by_architecture[var.architecture]
+  ami           = var.ami.id
+  instance_type = local.instance_type_by_architecture[var.ami.architecture]
 
   key_name = aws_key_pair.dev.id
 

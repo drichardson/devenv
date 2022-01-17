@@ -1,4 +1,5 @@
 output "address" {
-  value = aws_instance.dev.public_ip
+  description = "IP address of developer instance."
+  value       = aws_instance.dev.public_ip
 }
 

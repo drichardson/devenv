@@ -1,11 +1,16 @@
 variable "architecture" {
-  type        = string
   description = "Architecture of developer instance."
-  default     = "arm64"
+  type        = string
 
   validation {
     condition     = contains(["x86_64", "arm64"], var.architecture)
     error_message = "The architecture must be either x86_64 or arm64."
   }
+}
+
+variable "tags" {
+  description = "Tags to set on resources"
+  type        = map(string)
+  default     = {}
 }
 

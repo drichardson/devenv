@@ -28,14 +28,13 @@ provider "aws" {
 }
 
 module "ami_picker" {
-  source       = "../../modules/ami_picker"
+  source       = "../../modules/ami_pickers/debian"
   architecture = "x86_64"
-  distro       = "debian"
 }
 
 module "devenv" {
   source         = "../../modules/devenv"
-  ami            = module.ami_picker.debian
+  ami            = module.ami_picker.ami
   ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJcrrrk512HbXc04iyUdvzM9xAmPnWFWip7MG8sw6NuP"
 }
 

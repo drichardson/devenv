@@ -8,9 +8,8 @@ variable "architecture" {
   }
 }
 
-variable "tags" {
-  description = "Tags to set on resources"
-  type        = map(string)
-  default     = {}
+variable "ssh_public_key" {
+  description = "SSH public key for instance access."
+  type        = string
 }
 

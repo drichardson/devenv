@@ -1,32 +1,6 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.0"
-    }
-  }
-
-  backend "s3" {
-    bucket = "doug-iac"
-    key    = "tfstate/devenv"
-    region = "us-west-2"
-  }
-}
-
-provider "aws" {
-  region = "us-west-2"
-
-  default_tags {
-    tags = {
-      Environment = "developer"
-      Developer   = "doug"
-    }
-  }
-}
-
 resource "aws_key_pair" "dev" {
   key_name_prefix = "dev"
-  public_key      = file("~/.ssh/id_ed25519.pub")
+  public_key      = var.ssh_public_key
 }
 
 resource "aws_vpc" "dev" {

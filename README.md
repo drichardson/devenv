@@ -30,7 +30,7 @@ Once bootstrap is deployed, you can deploy one of the environments with:
 
 Select an AWS region with the lowest ping to make your interactive terminal
 experience feel as responsible as possible. Ping the instance after you set it
-up. If it's too slow, try changing the region.
+up. If the ping is too high, try another region.
 
 - Great: <20ms
 - Meh: ~80ms

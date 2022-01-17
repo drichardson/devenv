@@ -31,17 +31,37 @@ resource "aws_key_pair" "dev" {
 
 resource "aws_vpc" "dev" {
   cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "dev"
+  }
 }
 
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_subnet" "dev" {
-  count             = 4
+resource "aws_subnet" "public" {
+  count                   = 2
+  vpc_id                  = aws_vpc.dev.id
+  cidr_block              = "172.16.${count.index}.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "dev-public-${count.index}"
+  }
+}
+
+resource "aws_subnet" "private" {
+  count             = 2
   vpc_id            = aws_vpc.dev.id
-  cidr_block        = "172.16.${count.index}.0/24"
+  cidr_block        = "172.16.${count.index + length(aws_subnet.public)}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
+
+  tags = {
+    Name = "dev-private-${count.index}"
+  }
 }
 
 resource "aws_security_group" "dev" {
@@ -79,7 +99,7 @@ resource "aws_security_group" "dev" {
 }
 
 resource "aws_network_interface" "dev" {
-  subnet_id       = aws_subnet.dev[0].id
+  subnet_id       = aws_subnet.public[0].id
   security_groups = [aws_security_group.dev.id]
 }
 
@@ -121,7 +141,7 @@ data "aws_ami" "dev" {
 }
 
 resource "aws_ebs_volume" "dev" {
-  availability_zone = local.instance_availability_zone
+  availability_zone = data.aws_availability_zones.available.names[0]
   encrypted         = true
   type              = "gp3"
 
@@ -146,15 +166,13 @@ locals {
     x86_64 = "t3a.xlarge"
   }
 
-  instance_availability_zone = data.aws_availability_zones.available.names[0]
+  instance_subnet = aws_subnet.public[0].id
 }
 
 resource "aws_instance" "dev" {
 
   ami           = data.aws_ami.dev.id
   instance_type = local.instance_type_by_architecture[var.architecture]
-
-  availability_zone = local.instance_availability_zone
 
   key_name = aws_key_pair.dev.id
 

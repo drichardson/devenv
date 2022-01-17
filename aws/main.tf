@@ -64,6 +64,51 @@ resource "aws_subnet" "private" {
   }
 }
 
+resource "aws_internet_gateway" "dev" {
+  vpc_id = aws_vpc.dev.id
+
+  tags = {
+    Name = "dev"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.dev.id
+
+  tags = {
+    Name = "dev-public"
+  }
+}
+
+resource "aws_route" "to_internet" {
+  route_table_id = aws_route_table.public.id
+  gateway_id     = aws_internet_gateway.dev.id
+
+  destination_cidr_block = "0.0.0.0/0"
+}
+
+resource "aws_route_table_association" "public" {
+  for_each = { for i, v in aws_subnet.public : i => v.id }
+
+  subnet_id      = each.value
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.dev.id
+
+  tags = {
+    Name = "dev-private"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  for_each = { for i, v in aws_subnet.private : i => v.id }
+
+  subnet_id      = each.value
+  route_table_id = aws_route_table.private.id
+}
+
 resource "aws_security_group" "dev" {
   name_prefix = "dev"
   description = "Developer instance security group."
@@ -95,6 +140,10 @@ resource "aws_security_group" "dev" {
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "dev"
   }
 }
 
@@ -186,6 +235,8 @@ resource "aws_instance" "dev" {
   credit_specification {
     cpu_credits = "unlimited"
   }
+
+  depends_on = [aws_internet_gateway.dev]
 }
 
 resource "aws_volume_attachment" "dev" {

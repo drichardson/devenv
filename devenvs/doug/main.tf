@@ -9,8 +9,8 @@ terraform {
   backend "s3" {
     region = "us-west-2"
 
-    bucket = "tfstate-doug"
-    key    = "tfstate/devenv-us-west-1"
+    bucket = "tfstate-devenv"
+    key    = "devenvs/doug"
 
     dynamodb_table = "TerraformStateLock"
   }

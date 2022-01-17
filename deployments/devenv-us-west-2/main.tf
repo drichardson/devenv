@@ -7,15 +7,26 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "doug-iac"
-    key            = "tfstate/devenv-us-west-2"
+    bucket         = "tfstate-doug"
     region         = "us-west-2"
-    dynamodb_table = "terraform-lock-table"
+    dynamodb_table = "TerraformStateLock"
+
+    key = "tfstate/devenv-us-west-2"
   }
 }
 
+provider "aws" {
+  region = "us-west-1"
+
+  default_tags {
+    tags = {
+      Terraform = "devenv-us-west-2"
+    }
+  }
+}
+
+
 module "devenv" {
   source = "../../modules/devenv"
-  region = "us-west-2"
 }
 

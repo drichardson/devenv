@@ -32,3 +32,6 @@ module "devenv" {
   ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJcrrrk512HbXc04iyUdvzM9xAmPnWFWip7MG8sw6NuP"
 }
 
+output "address" {
+  value = module.devenv.address
+}

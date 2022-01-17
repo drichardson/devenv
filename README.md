@@ -1,7 +1,13 @@
 # Cloud Development Environments
 Configure cloud compute instances for interactive developer machines.
 
-# Bootstraping AWS
+# Setup
+
+- AWS account
+- [aws cli](https://aws.amazon.com/cli/) - configure it to use your AWS account
+- [terraform](https://www.terraform.io/downloads)
+
+# Bootstraping Terraform
 The S3 bucket and DynamoDB table for the Terraform S3 backend need to be
 created before anything else. Do this by going to bootstrap and running:
 
@@ -16,5 +22,4 @@ Once bootstrap is deployed, you can deploy one of the environments with:
 
     terraform init
     terraform apply
-
 

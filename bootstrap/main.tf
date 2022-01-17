@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "tfstate_bucket" {
   acl    = "private"
 }
 
-resource "aws_dynamodb_table" "tfstate_lock_stable" {
+resource "aws_dynamodb_table" "tfstate_lock_table" {
   name = "TerraformStateLock"
 
   billing_mode = "PAY_PER_REQUEST"

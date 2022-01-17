@@ -22,6 +22,7 @@ provider "aws" {
   default_tags {
     tags = {
       Terraform = "devenv-us-west-1"
+      Name      = "dev-doug"
     }
   }
 }

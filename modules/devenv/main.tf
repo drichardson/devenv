@@ -1,3 +1,19 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+locals {
+  # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
+  # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504
+  # t3.xlarge - 4VCPU, 16GiB x86_64 Intel $0.1664
+  instance_type_by_architecture = {
+    arm64  = "t4g.xlarge"
+    x86_64 = "t3a.xlarge"
+  }
+
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
+
 resource "aws_key_pair" "dev" {
   key_name_prefix = "dev"
   public_key      = var.ssh_public_key
@@ -5,53 +21,21 @@ resource "aws_key_pair" "dev" {
 
 resource "aws_vpc" "dev" {
   cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = "dev"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
 }
 
 resource "aws_subnet" "public" {
-  count                   = 2
   vpc_id                  = aws_vpc.dev.id
-  cidr_block              = "172.16.${count.index}.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
+  cidr_block              = "172.16.0.0/24"
+  availability_zone       = local.availability_zone
   map_public_ip_on_launch = true
-
-  tags = {
-    Name = "dev-public-${count.index}"
-  }
-}
-
-resource "aws_subnet" "private" {
-  count             = 2
-  vpc_id            = aws_vpc.dev.id
-  cidr_block        = "172.16.${count.index + length(aws_subnet.public)}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)]
-
-  tags = {
-    Name = "dev-private-${count.index}"
-  }
 }
 
 resource "aws_internet_gateway" "dev" {
   vpc_id = aws_vpc.dev.id
-
-  tags = {
-    Name = "dev"
-  }
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.dev.id
-
-  tags = {
-    Name = "dev-public"
-  }
 }
 
 resource "aws_route" "to_internet" {
@@ -62,25 +46,8 @@ resource "aws_route" "to_internet" {
 }
 
 resource "aws_route_table_association" "public" {
-  for_each = { for i, v in aws_subnet.public : i => v.id }
-
-  subnet_id      = each.value
+  subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.dev.id
-
-  tags = {
-    Name = "dev-private"
-  }
-}
-
-resource "aws_route_table_association" "private" {
-  for_each = { for i, v in aws_subnet.private : i => v.id }
-
-  subnet_id      = each.value
-  route_table_id = aws_route_table.private.id
 }
 
 resource "aws_security_group" "dev" {
@@ -115,17 +82,12 @@ resource "aws_security_group" "dev" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-
-  tags = {
-    Name = "dev"
-  }
 }
 
 resource "aws_network_interface" "dev" {
-  subnet_id       = aws_subnet.public[0].id
+  subnet_id       = aws_subnet.public.id
   security_groups = [aws_security_group.dev.id]
 }
-
 
 data "aws_ami" "dev" {
   executable_users = ["all"]
@@ -161,10 +123,15 @@ data "aws_ami" "dev" {
     name   = "block-device-mapping.volume-type"
     values = ["gp2"]
   }
+
+  filter {
+    name   = "ena-support"
+    values = [true]
+  }
 }
 
 resource "aws_ebs_volume" "dev" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = local.availability_zone
   encrypted         = true
   type              = "gp3"
 
@@ -175,18 +142,6 @@ resource "aws_ebs_volume" "dev" {
   size       = 10
   throughput = 125
   iops       = 3000
-}
-
-locals {
-  # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
-  # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504
-  # t3.xlarge - 4VCPU, 16GiB x86_64 Intel $0.1664
-  instance_type_by_architecture = {
-    arm64  = "t4g.xlarge"
-    x86_64 = "t3a.xlarge"
-  }
-
-  instance_subnet = aws_subnet.public[0].id
 }
 
 resource "aws_instance" "dev" {

@@ -1,6 +1,15 @@
 # https://ubuntu.com/server/docs/cloud-images/amazon-ec2
 # https://aws.amazon.com/marketplace/seller-profile?id=565feec9-3d43-413e-9760-c651546613f2
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
 data "aws_ami" "ubuntu" {
   executable_users = ["all"]
   most_recent      = true

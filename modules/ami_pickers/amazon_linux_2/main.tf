@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
 data "aws_ami" "amazon_linux_2" {
   executable_users = ["all"]
   most_recent      = true

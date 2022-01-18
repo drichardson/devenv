@@ -1,11 +1,4 @@
 terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.0"
-    }
-  }
-
   backend "s3" {
     region = "us-west-2"
 
@@ -46,7 +39,17 @@ output "user" {
   value = module.ami_picker.username
 }
 
-output "ssh" {
-  description = "SSH connection string"
-  value       = format("%s@%s", module.ami_picker.username, module.devenv.address)
+output "instance_id" {
+  description = "Developer instance ID."
+  value       = module.devenv.instance_id
+}
+
+data "aws_region" "current" {}
+
+output "stop-instance-command" {
+  value = "aws ec2 stop-instances --region ${data.aws_region.current.name} --instance-ids ${module.devenv.instance_id}"
+}
+
+output "start-instance-command" {
+  value = "aws ec2 start-instances --region ${data.aws_region.current.name} --instance-ids ${module.devenv.instance_id}"
 }

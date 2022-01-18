@@ -1,17 +1,14 @@
-data "aws_availability_zones" "available" {
-  state = "available"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
 }
 
-locals {
-  # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
-  # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504
-  # t3.xlarge - 4VCPU, 16GiB x86_64 Intel $0.1664
-  instance_type_by_architecture = {
-    arm64  = "t4g.xlarge"
-    x86_64 = "t3a.xlarge"
-  }
-
-  availability_zone = data.aws_availability_zones.available.names[0]
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_key_pair" "dev" {
@@ -26,7 +23,7 @@ resource "aws_vpc" "dev" {
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.dev.id
   cidr_block              = "172.16.0.0/24"
-  availability_zone       = local.availability_zone
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 }
 
@@ -89,27 +86,14 @@ resource "aws_network_interface" "dev" {
   security_groups = [aws_security_group.dev.id]
 }
 
-/*
-data "aws_ami" "dev" {
-  filter {
-    name   = "image-id"
-    values = [var.ami_id]
+locals {
+  # t4g.xlarge - 4vCPU, 16GiB arm64 $0.1344
+  # t3a.xlarge - 4VCPU, 16GiB x86_64 AMD $0.1504
+  # t3.xlarge - 4VCPU, 16GiB x86_64 Intel $0.1664
+  instance_type_by_architecture = {
+    arm64  = "t4g.xlarge"
+    x86_64 = "t3a.xlarge"
   }
-}
-*/
-
-resource "aws_ebs_volume" "dev" {
-  availability_zone = local.availability_zone
-  encrypted         = true
-  type              = "gp3"
-
-  # gp3 volumes can be provisioned with different throughput (125-1000 MiB/s)
-  # and iops (3000-16000), but there is a relationship requirement between
-  # size, throughput, and iops.
-  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html
-  size       = 10
-  throughput = 125
-  iops       = 3000
 }
 
 resource "aws_instance" "dev" {
@@ -120,6 +104,20 @@ resource "aws_instance" "dev" {
   key_name = aws_key_pair.dev.id
 
   ebs_optimized = true
+
+  root_block_device {
+    volume_size           = 30
+    delete_on_termination = true
+    encrypted             = true
+
+    # gp3 volumes can be provisioned with different throughput (125-1000 MiB/s)
+    # and iops (3000-16000), but there is a relationship requirement between
+    # size, throughput, and iops.
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html
+    volume_type = "gp3"
+    iops        = 3000
+    throughput  = 125
+  }
 
   network_interface {
     network_interface_id = aws_network_interface.dev.id
@@ -133,9 +131,3 @@ resource "aws_instance" "dev" {
   depends_on = [aws_internet_gateway.dev]
 }
 
-resource "aws_volume_attachment" "dev" {
-  # device_name is required by terraform, but overwritten by AWS.
-  device_name = "/dev/xvdf"
-  volume_id   = aws_ebs_volume.dev.id
-  instance_id = aws_instance.dev.id
-}

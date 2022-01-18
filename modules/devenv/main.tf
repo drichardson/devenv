@@ -134,7 +134,8 @@ resource "aws_instance" "dev" {
 }
 
 resource "aws_volume_attachment" "dev" {
-  device_name = "/dev/xvdb"
+  # device_name is required by terraform, but overwritten by AWS.
+  device_name = "/dev/xvdf"
   volume_id   = aws_ebs_volume.dev.id
   instance_id = aws_instance.dev.id
 }
